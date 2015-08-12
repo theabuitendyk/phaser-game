@@ -18,7 +18,7 @@ var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create
 
 function preload() {
   game.load.image('background', 'assets/background.png');
-  game.load.spritesheet('cat', 'assets/cat.png');
+  game.load.spritesheet('cat', 'assets/cat.png', 60, 51);
 }
 
 function create() {
@@ -27,10 +27,43 @@ function create() {
   game.add.sprite(0, 0, 'background');
 
   player = game.add.sprite(370, 50, 'cat');
+
+  game.physics.arcade.enable(player);
+
+  player.body.collideWorldBounds = true;
+
+  player.animations.add('left', 10, true);
+  player.animations.add('right', 10, true);
+
+  cursors = game.input.keyboard.createCursorKeys();
+
+  score = 0;
+
+  scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
 }
 
 function update() {
-  
+  player.body.velocity.x = 0;
+
+  if (cursors.left.isDown)
+  {
+      //  Move to the left
+      player.body.velocity.x = -150;
+
+      player.animations.play('left');
+  }
+  else if (cursors.right.isDown)
+  {
+      //  Move to the right
+      player.body.velocity.x = 150;
+
+      player.animations.play('right');
+  }
+  else
+  {
+      //  Stand still
+      player.animations.stop();
+  }
 }
 
 </script>
