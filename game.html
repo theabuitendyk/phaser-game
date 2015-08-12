@@ -16,9 +16,16 @@
 
 var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 
+var playerSpeed = 0;
+
 function preload() {
   game.load.image('background', 'assets/background.png');
-  game.load.spritesheet('cat', 'assets/cat.png', 60, 51);
+  game.load.image('yarn', 'assets/yarn.png');
+  game.load.image('plus', 'assets/plus.png');
+  game.load.image('life', 'assets/life.png');
+  game.load.image('death', 'assets/death.png');
+  game.load.image('minus', 'assets/minus.png');
+  game.load.image('cat', 'assets/cat.png');
 }
 
 function create() {
@@ -26,20 +33,69 @@ function create() {
 
   game.add.sprite(0, 0, 'background');
 
+  // PLAYER
   player = game.add.sprite(370, 50, 'cat');
 
   game.physics.arcade.enable(player);
 
   player.body.collideWorldBounds = true;
 
-  player.animations.add('left', 10, true);
-  player.animations.add('right', 10, true);
+  player.animations.add('left');
+  player.animations.add('right');
 
   cursors = game.input.keyboard.createCursorKeys();
+
+  // YARN
+  ballsOfYarn = game.add.group();
+
+  ballsOfYarn.enableBody = true;
+
+  // PLUS SIGN
+  plusSigns = game.add.group();
+
+  plusSigns.enableBody = true;
+
+  // MINUS SIGN
+  minusSigns = game.add.group();
+
+  minusSigns.enableBody = true;
+
+  // LIFE
+  lives = game.add.group();
+
+  lives.enableBody = true;
+
+  // DEATH
+  deaths = game.add.group();
+
+  deaths.enableBody = true;
+
+  game.time.events.loop(Phaser.Timer.SECOND * 2, addItem, this);
 
   score = 0;
 
   scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
+
+  playerLives = 1;
+
+  playerLivesText = game.add.text(600, 16, 'lives: 1', { fontSize: '32px', fill: '#000' });
+}
+
+function addItem(){
+
+  items = [[ballsOfYarn, 'yarn'], [plusSigns, 'plus'], [minusSigns, 'minus'], [lives, 'life'], [deaths, 'death']]
+
+  type = items[Math.floor(Math.random()*items.length)];
+
+  var item = type[0].create(Math.random() * 800, 600, type[1]);
+
+  item.body.velocity.y = -100;
+
+  item.events.onOutOfBounds.add(destroyItem, this);
+}
+
+function destroyItem(yarn) {
+  yarn.destroy();
 }
 
 function update() {
@@ -47,22 +103,97 @@ function update() {
 
   if (cursors.left.isDown)
   {
-      //  Move to the left
-      player.body.velocity.x = -150;
+    player.body.velocity.x = (-150 - playerSpeed);
 
-      player.animations.play('left');
+    player.animations.play('left');
   }
   else if (cursors.right.isDown)
   {
-      //  Move to the right
-      player.body.velocity.x = 150;
+    player.body.velocity.x = (150 + playerSpeed);
 
-      player.animations.play('right');
+    player.animations.play('right');
   }
   else
   {
-      //  Stand still
-      player.animations.stop();
+    player.animations.stop();
+  }
+
+  game.physics.arcade.overlap(player, ballsOfYarn, collectYarn, null, this);
+
+  game.physics.arcade.overlap(player, plusSigns, increasePlayerSpeed, null, this);
+
+  game.physics.arcade.overlap(player, minusSigns, decreasePlayerSpeed, null, this);
+
+  game.physics.arcade.overlap(player, lives, addALife, null, this);
+
+  game.physics.arcade.overlap(player, deaths, loseALife, null, this);
+
+  function collectYarn (player, yarn) {
+    yarn.destroy();
+
+    score += 10;
+    scoreText.text = 'score: ' + score;
+
+  }
+
+  // TODO refactor into one function
+
+  function increasePlayerSpeed (player, plus) {
+    plus.destroy();
+
+    playerSpeed += 30;
+  }
+
+  function decreasePlayerSpeed (player, minus) {
+    minus.destroy();
+
+    if (playerSpeed > 30) 
+    { 
+      playerSpeed -= 30;
+    }
+
+  }
+
+  function addALife (player, life) {
+
+    life.destroy();
+
+    if (playerLives < 9)
+    {
+      playerLives += 1;
+      playerLivesText.text = 'lives: ' + playerLives;
+    }
+  }
+
+  function loseALife (player, death) {
+
+    death.destroy();
+
+    if (playerLives > 0)
+    {
+      playerLives -= 1;
+      playerLivesText.text = 'lives: ' + playerLives;
+    }
+  }
+
+  if (playerLives == 0)
+  {
+    game.lockRender = true;
+
+    // make button
+    // revive button?
+
+    // if(userClicksRestart()) { 
+    //   restartGame();  // Call the restart function
+    // }
+  }
+
+  function restartGame() {
+    game.lockRender = false;
+    player.resetPosition();
+    score = 0;
+    playerSpeed = 0; 
+    playerLives = 9;
   }
 }
 
