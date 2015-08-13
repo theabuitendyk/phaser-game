@@ -108,8 +108,9 @@ function pauseGame() {
 
 function playGame() {
   game.lockRender = false;
-  game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
-  game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
+  // game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
+  // game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
+  cursors = game.input.keyboard.createCursorKeys();
 }
 
 function addItem(){
