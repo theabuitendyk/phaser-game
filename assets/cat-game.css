@@ -1,0 +1,38 @@
+* {
+  font-family: Sniglet;
+}
+
+body {
+  background-color: black;
+}
+
+canvas {
+  position: fixed;
+  bottom: 0;
+  float: left;
+  /* margin auto with left and right at 0 centers? */
+}
+
+h1 {
+  color: white;
+  margin-left: 20px;
+  letter-spacing: 10px;
+}
+
+table {
+  color: black;
+  right: 0;
+  bottom: 0;
+  position: absolute;
+  margin-left: 820px;
+  padding-left: 20px;
+  width: 430px;
+  background-color: white;
+  border-radius: 5px;
+  height: 590px;
+  font-size: 22px;
+}
+
+th {
+  font-size: 27px;
+}

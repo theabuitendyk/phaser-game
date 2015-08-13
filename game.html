@@ -4,28 +4,35 @@
   <meta charset="UTF-8" />
   <title>Phaser Game</title>
     <script src="//cdn.jsdelivr.net/phaser/2.2.2/phaser.min.js"></script>
-    <style type="text/css">
-        body {
-            margin: 0;
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="assets/cat-game.css">
+    <link href='http://fonts.googleapis.com/css?family=Sniglet' rel='stylesheet' type='text/css'>
 </head>
 <body>
 
-<script type="text/javascript">
+<h1>HAPPY CAT</h1>
+
+<script>
 
 var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 
 var playerSpeed = 0;
 
+var itemSpeed = -125;
+
+// var gameStatus = 'pause';
+
 function preload() {
   game.load.image('background', 'assets/background.png');
   game.load.image('yarn', 'assets/yarn.png');
+  game.load.image('mouse', 'assets/mouse.png');
+  game.load.image('zed', 'assets/sleep.png');
   game.load.image('plus', 'assets/plus.png');
   game.load.image('life', 'assets/life.png');
   game.load.image('death', 'assets/death.png');
   game.load.image('minus', 'assets/minus.png');
   game.load.image('cat', 'assets/cat.png');
+  game.load.image('pause', 'assets/pause.png');
+  // game.load.image('play', 'assets/play.png');
 }
 
 function create() {
@@ -50,6 +57,16 @@ function create() {
 
   ballsOfYarn.enableBody = true;
 
+  // MOUSE
+  mice = game.add.group();
+
+  mice.enableBody = true;
+
+  // ZED / SLEEP
+  zeds = game.add.group();
+
+  zeds.enableBody = true;
+
   // PLUS SIGN
   plusSigns = game.add.group();
 
@@ -70,26 +87,76 @@ function create() {
 
   deaths.enableBody = true;
 
-  game.time.events.loop(Phaser.Timer.SECOND * 2, addItem, this);
-
   score = 0;
 
-  scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
+  scoreText = game.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
 
-  playerLives = 1;
+  game.time.events.loop(Phaser.Timer.SECOND * 0.35, addItem, this);
 
-  playerLivesText = game.add.text(600, 16, 'lives: 1', { fontSize: '32px', fill: '#000' });
+  playerLives = 9;
+
+  playerLivesText = game.add.text(600, 16, 'Lives: 9', { fontSize: '32px', fill: '#000' });
+
+  pauseButton = game.add.button(800 - 50, 20, 'pause', pauseOnClick, this);
+
+  // createPauseButton();
+  // playButton = game.add.button(800 - 100, 16, 'play', playOnClick, this);
+  // playButton.visible = false;
+
 }
+
+// function createPauseButton() {
+//   pauseButton = game.add.button(800 - 50, 16, gameStatus, pauseOnClick, this);
+// }
+
+function pauseOnClick() {
+  game.lockRender =! game.lockRender;
+
+  // pauseButton.kill();
+
+  // if (game.lockRender) {
+  //   gameStatus = 'play';
+  // }
+  // else {
+  //   gameStatus = 'pause';
+  // }
+
+  // createPauseButton();
+  
+}
+
+// function playOnClick() {
+//   game.lockRender = false;
+// }
 
 function addItem(){
 
-  items = [[ballsOfYarn, 'yarn'], [plusSigns, 'plus'], [minusSigns, 'minus'], [lives, 'life'], [deaths, 'death']]
+  // TODO group of groups 
 
-  type = items[Math.floor(Math.random()*items.length)];
+  num = Math.random();
 
-  var item = type[0].create(Math.random() * 800, 600, type[1]);
+  items = [[ballsOfYarn, 'yarn'], [mice, 'mouse'], [zeds, 'zed']];
 
-  item.body.velocity.y = -100;
+  lifeOrDeath = [[lives, 'life'], [deaths, 'death']];
+
+  speeds = [[plusSigns, 'plus'], [minusSigns, 'minus']];
+
+  if (num < 0.1) {
+    type = lifeOrDeath[0];
+  }
+  else if (num < 0.4) {
+    type = lifeOrDeath[1];
+  }
+  else if (num < 0.8) {
+    type = items[Math.floor(Math.random()*items.length)];
+  }
+  else {
+    type = speeds[Math.floor(Math.random()*speeds.length)];
+  }
+
+  var item = type[0].create(25 + (Math.random() * 750), 600, type[1]);
+
+  item.body.velocity.y = itemSpeed;
 
   item.events.onOutOfBounds.add(destroyItem, this);
 }
@@ -103,13 +170,13 @@ function update() {
 
   if (cursors.left.isDown)
   {
-    player.body.velocity.x = (-150 - playerSpeed);
+    player.body.velocity.x = (-200 - playerSpeed);
 
     player.animations.play('left');
   }
   else if (cursors.right.isDown)
   {
-    player.body.velocity.x = (150 + playerSpeed);
+    player.body.velocity.x = (200 + playerSpeed);
 
     player.animations.play('right');
   }
@@ -119,6 +186,10 @@ function update() {
   }
 
   game.physics.arcade.overlap(player, ballsOfYarn, collectYarn, null, this);
+
+  game.physics.arcade.overlap(player, mice, collectMouse, null, this);
+
+  game.physics.arcade.overlap(player, zeds, collectZed, null, this);
 
   game.physics.arcade.overlap(player, plusSigns, increasePlayerSpeed, null, this);
 
@@ -131,25 +202,44 @@ function update() {
   function collectYarn (player, yarn) {
     yarn.destroy();
 
-    score += 10;
-    scoreText.text = 'score: ' + score;
-
+    addToScore(100);
   }
+
+  function collectMouse (player, mouse) {
+    mouse.destroy();
+
+    addToScore(200);
+  }
+
+  function collectZed (player, zed) {
+    zed.destroy();
+
+    addToScore(500);
+  }
+
+  function addToScore (points) {
+    score += points;
+    scoreText.text = 'Score: ' + score;
+  }
+
 
   // TODO refactor into one function
 
   function increasePlayerSpeed (player, plus) {
     plus.destroy();
 
-    playerSpeed += 30;
+    if (playerSpeed > 10 && playerSpeed < 100) 
+    { 
+      playerSpeed += 10;    
+    }
   }
 
   function decreasePlayerSpeed (player, minus) {
     minus.destroy();
 
-    if (playerSpeed > 30) 
+    if (playerSpeed > 10 && playerSpeed < 100) 
     { 
-      playerSpeed -= 30;
+      playerSpeed -= 10;
     }
 
   }
@@ -161,7 +251,7 @@ function update() {
     if (playerLives < 9)
     {
       playerLives += 1;
-      playerLivesText.text = 'lives: ' + playerLives;
+      playerLivesText.text = 'Lives: ' + playerLives;
     }
   }
 
@@ -172,7 +262,7 @@ function update() {
     if (playerLives > 0)
     {
       playerLives -= 1;
-      playerLivesText.text = 'lives: ' + playerLives;
+      playerLivesText.text = 'Lives: ' + playerLives;
     }
   }
 
@@ -196,9 +286,57 @@ function update() {
     playerSpeed = 0; 
     playerLives = 9;
   }
+
+  if (score > 0 && itemSpeed > -350) 
+  {
+    itemSpeed = -(125 + score * 0.02);
+  }
+  
 }
 
+// background changes color every hundred points
+// highscore
+
+// comments
+
 </script>
+
+<div>
+  <table>
+    <th colspan="2">Cats have 9 lives. Don't run out!</th>
+    <tr>
+      <td><img src="assets/life.png"></td>
+      <td>Gain a Life!</td>
+    </tr>
+    <tr>
+      <td><img src="assets/death.png"></td>
+      <td>Lose a Life!</td>
+    </tr>
+    <tr>
+      <td><img src="assets/plus.png"></td>
+      <td>Faster Cat</td>
+    </tr>
+    <tr>
+      <td><img src="assets/minus.png"></td>
+      <td>Slower Cat</td>
+    </tr>
+    <tr>
+      <td><img src="assets/yarn.png"></td>
+      <td>Yarn is fun.</br>
+          Add 100 Points!</td>
+    </tr>
+    <tr>
+      <td><img src="assets/mouse.png"></td>
+      <td>Yum, a mouse.</br>
+          Add 200 Points!</td>
+    </tr>
+    <tr>
+      <td><img src="assets/sleep.png"></td>
+      <td>Cat nap 4 life.</br>
+          Add 500 Points.</td>
+    </tr>
+  </table>
+</div>
 
 </body>
 </html>
