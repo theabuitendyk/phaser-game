@@ -19,8 +19,6 @@ var playerSpeed = 0;
 
 var itemSpeed = -125;
 
-// var gameStatus = 'pause';
-
 function preload() {
   game.load.image('background', 'assets/background.png');
   game.load.image('yarn', 'assets/yarn.png');
@@ -32,7 +30,7 @@ function preload() {
   game.load.image('minus', 'assets/minus.png');
   game.load.image('cat', 'assets/cat.png');
   game.load.image('pause', 'assets/pause.png');
-  // game.load.image('play', 'assets/play.png');
+  game.load.image('play', 'assets/play.png');
 }
 
 function create() {
@@ -97,37 +95,22 @@ function create() {
 
   playerLivesText = game.add.text(600, 16, 'Lives: 9', { fontSize: '32px', fill: '#000' });
 
-  pauseButton = game.add.button(800 - 50, 20, 'pause', pauseOnClick, this);
-
-  // createPauseButton();
-  // playButton = game.add.button(800 - 100, 16, 'play', playOnClick, this);
-  // playButton.visible = false;
+  pauseButton = game.add.button(800 - 54, 25, 'pause', pauseGame, this);
+  playButton = game.add.button(800 - 34, 25, 'play', playGame, this);
 
 }
 
-// function createPauseButton() {
-//   pauseButton = game.add.button(800 - 50, 16, gameStatus, pauseOnClick, this);
-// }
-
-function pauseOnClick() {
-  game.lockRender =! game.lockRender;
-
-  // pauseButton.kill();
-
-  // if (game.lockRender) {
-  //   gameStatus = 'play';
-  // }
-  // else {
-  //   gameStatus = 'pause';
-  // }
-
-  // createPauseButton();
-  
+function pauseGame() {
+  game.lockRender = true;
+  game.input.keyboard.removeKey(Phaser.Keyboard.LEFT);
+  game.input.keyboard.removeKey(Phaser.Keyboard.RIGHT);
 }
 
-// function playOnClick() {
-//   game.lockRender = false;
-// }
+function playGame() {
+  game.lockRender = false;
+  game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
+  game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
+}
 
 function addItem(){
 
@@ -154,11 +137,16 @@ function addItem(){
     type = speeds[Math.floor(Math.random()*speeds.length)];
   }
 
-  var item = type[0].create(25 + (Math.random() * 750), 600, type[1]);
+  var item = type[0].create(rand_interval(), 600, type[1]);
+  // 25 + (Math.random() * 750
 
   item.body.velocity.y = itemSpeed;
 
   item.events.onOutOfBounds.add(destroyItem, this);
+}
+
+function rand_interval() {
+  return Math.round((Math.random()*(775-25)+25)/50)*50;
 }
 
 function destroyItem(yarn) {
