@@ -217,7 +217,7 @@ function update() {
   function increasePlayerSpeed (player, plus) {
     plus.destroy();
 
-    if (playerSpeed > 10 && playerSpeed < 100) 
+    if (playerSpeed < 100) 
     { 
       playerSpeed += 10;    
     }
@@ -226,7 +226,7 @@ function update() {
   function decreasePlayerSpeed (player, minus) {
     minus.destroy();
 
-    if (playerSpeed > 10 && playerSpeed < 100) 
+    if (playerSpeed > 10) 
     { 
       playerSpeed -= 10;
     }
