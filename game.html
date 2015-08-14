@@ -2,8 +2,12 @@
 <html lang="en"> 
 <head> 
   <meta charset="UTF-8" />
+  <link rel="icon" src="assets/cat.png">
   <title>Phaser Game</title>
     <script src="//cdn.jsdelivr.net/phaser/2.2.2/phaser.min.js"></script>
+    <script src="assets/item.js"></script>
+    <script src="assets/player.js"></script>
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <link rel="stylesheet" type="text/css" href="assets/cat-game.css">
     <link href='http://fonts.googleapis.com/css?family=Sniglet' rel='stylesheet' type='text/css'>
 </head>
@@ -15,9 +19,9 @@
 
 var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 
-var playerSpeed = 0;
+playerSpeed = 0;
 
-var itemSpeed = -125;
+spriteSpeed = -125;
 
 function preload() {
   game.load.image('background', 'assets/background.png');
@@ -31,69 +35,25 @@ function preload() {
   game.load.image('cat', 'assets/cat.png');
   game.load.image('pause', 'assets/pause.png');
   game.load.image('play', 'assets/play.png');
+  game.load.image('restart', 'assets/restart.png');
 }
 
 function create() {
+
   game.physics.startSystem(Phaser.Physics.ARCADE);
 
   game.add.sprite(0, 0, 'background');
 
-  // PLAYER
-  player = game.add.sprite(370, 50, 'cat');
-
-  game.physics.arcade.enable(player);
-
-  player.body.collideWorldBounds = true;
-
-  player.animations.add('left');
-  player.animations.add('right');
-
-  cursors = game.input.keyboard.createCursorKeys();
-
-  // YARN
-  ballsOfYarn = game.add.group();
-
-  ballsOfYarn.enableBody = true;
-
-  // MOUSE
-  mice = game.add.group();
-
-  mice.enableBody = true;
-
-  // ZED / SLEEP
-  zeds = game.add.group();
-
-  zeds.enableBody = true;
-
-  // PLUS SIGN
-  plusSigns = game.add.group();
-
-  plusSigns.enableBody = true;
-
-  // MINUS SIGN
-  minusSigns = game.add.group();
-
-  minusSigns.enableBody = true;
-
-  // LIFE
-  lives = game.add.group();
-
-  lives.enableBody = true;
-
-  // DEATH
-  deaths = game.add.group();
-
-  deaths.enableBody = true;
+  createGroups();
+  createPlayer();
 
   score = 0;
-
   scoreText = game.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
 
-  game.time.events.loop(Phaser.Timer.SECOND * 0.35, addItem, this);
-
   playerLives = 9;
-
   playerLivesText = game.add.text(600, 16, 'Lives: 9', { fontSize: '32px', fill: '#000' });
+
+  game.time.events.loop(Phaser.Timer.SECOND * 0.35, addSprite, this);
 
   pauseButton = game.add.button(800 - 54, 25, 'pause', pauseGame, this);
   playButton = game.add.button(800 - 34, 25, 'play', playGame, this);
@@ -108,185 +68,47 @@ function pauseGame() {
 
 function playGame() {
   game.lockRender = false;
-  // game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
-  // game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
   cursors = game.input.keyboard.createCursorKeys();
 }
 
-function addItem(){
-
-  // TODO group of groups 
-
-  num = Math.random();
-
-  items = [[ballsOfYarn, 'yarn'], [mice, 'mouse'], [zeds, 'zed']];
-
-  lifeOrDeath = [[lives, 'life'], [deaths, 'death']];
-
-  speeds = [[plusSigns, 'plus'], [minusSigns, 'minus']];
-
-  if (num < 0.1) {
-    type = lifeOrDeath[0];
-  }
-  else if (num < 0.4) {
-    type = lifeOrDeath[1];
-  }
-  else if (num < 0.8) {
-    type = items[Math.floor(Math.random()*items.length)];
-  }
-  else {
-    type = speeds[Math.floor(Math.random()*speeds.length)];
-  }
-
-  var item = type[0].create(rand_interval(), 600, type[1]);
-  // 25 + (Math.random() * 750
-
-  item.body.velocity.y = itemSpeed;
-
-  item.events.onOutOfBounds.add(destroyItem, this);
-}
-
-function rand_interval() {
-  return Math.round((Math.random()*(775-25)+25)/50)*50;
-}
-
-function destroyItem(yarn) {
-  yarn.destroy();
-}
-
 function update() {
-  player.body.velocity.x = 0;
 
-  if (cursors.left.isDown)
-  {
-    player.body.velocity.x = (-200 - playerSpeed);
+  playerMovement();
 
-    player.animations.play('left');
-  }
-  else if (cursors.right.isDown)
-  {
-    player.body.velocity.x = (200 + playerSpeed);
-
-    player.animations.play('right');
-  }
-  else
-  {
-    player.animations.stop();
-  }
-
-  game.physics.arcade.overlap(player, ballsOfYarn, collectYarn, null, this);
-
-  game.physics.arcade.overlap(player, mice, collectMouse, null, this);
-
-  game.physics.arcade.overlap(player, zeds, collectZed, null, this);
-
-  game.physics.arcade.overlap(player, plusSigns, increasePlayerSpeed, null, this);
-
-  game.physics.arcade.overlap(player, minusSigns, decreasePlayerSpeed, null, this);
-
-  game.physics.arcade.overlap(player, lives, addALife, null, this);
-
-  game.physics.arcade.overlap(player, deaths, loseALife, null, this);
-
-  function collectYarn (player, yarn) {
-    yarn.destroy();
-
-    addToScore(100);
-  }
-
-  function collectMouse (player, mouse) {
-    mouse.destroy();
-
-    addToScore(200);
-  }
-
-  function collectZed (player, zed) {
-    zed.destroy();
-
-    addToScore(500);
-  }
-
-  function addToScore (points) {
-    score += points;
-    scoreText.text = 'Score: ' + score;
-  }
-
-
-  // TODO refactor into one function
-
-  function increasePlayerSpeed (player, plus) {
-    plus.destroy();
-
-    if (playerSpeed < 100) 
-    { 
-      playerSpeed += 10;    
-    }
-  }
-
-  function decreasePlayerSpeed (player, minus) {
-    minus.destroy();
-
-    if (playerSpeed > 10) 
-    { 
-      playerSpeed -= 10;
-    }
-
-  }
-
-  function addALife (player, life) {
-
-    life.destroy();
-
-    if (playerLives < 9)
-    {
-      playerLives += 1;
-      playerLivesText.text = 'Lives: ' + playerLives;
-    }
-  }
-
-  function loseALife (player, death) {
-
-    death.destroy();
-
-    if (playerLives > 0)
-    {
-      playerLives -= 1;
-      playerLivesText.text = 'Lives: ' + playerLives;
-    }
-  }
+  game.physics.arcade.overlap(player, items.children, collectItem, null, this);  
+  game.physics.arcade.overlap(player, speeds.children, changePlayerSpeed, null, this);
+  game.physics.arcade.overlap(player, hearts.children, updateLives, null, this);
 
   // TODO how do I update score before lockRender?
-  if (playerLives == 0)
-  {
-    game.lockRender = true;
+  if (playerLives == 0) {
+    // game.lockRender = true;
 
-    // make button
-    // revive button?
-
-    // if(userClicksRestart()) { 
-    //   restartGame();  // Call the restart function
-    // }
+    restartButton = game.add.button(game.world.centerX, game.world.centerY, 'restart', restartGame, this);
+    restartButton.anchor.setTo(0.5);
   }
 
   function restartGame() {
-    game.lockRender = false;
-    player.resetPosition();
+
+    // TODO find a way to delete the restartButton
+    // console.log(restartButton);
+    // restartButton.destroy();
+    // console.log(restartButton);
+
+    game.lockRender = true;
+    player.x = 370;
+    player.y = 50;
     score = 0;
     playerSpeed = 0; 
     playerLives = 9;
+
   }
 
-  if (score > 0 && itemSpeed > -350) 
-  {
-    itemSpeed = -(125 + score * 0.02);
+  // Increase speed with score
+  if (score > 0 && spriteSpeed > -350) {
+    spriteSpeed = -(125 + score * 0.02);
   }
   
 }
-
-// background changes color every hundred points
-// highscore
-
-// comments
 
 </script>
 
