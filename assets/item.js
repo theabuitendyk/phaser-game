@@ -27,7 +27,7 @@ function createGroups() {
 
 function addSprite() {
 
-  num = Math.random();
+  num = Math.random() * 1;
 
   if (num < 0.1) {
     type = lives;
