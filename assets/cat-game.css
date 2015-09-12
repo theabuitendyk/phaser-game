@@ -13,10 +13,24 @@ canvas {
   /* margin auto with left and right at 0 centers? */
 }
 
-h1 {
+#title {
   color: white;
   margin-left: 20px;
   letter-spacing: 10px;
+  float: left;
+  /*position: fixed;*/
+}
+
+#restart {
+  display: none;
+  background-image: url('restart.png');
+  width: 90px;
+  height: 60px;
+  /*position: relative;*/
+  float: left;
+  background-size: 100%;
+  margin-left: 25px;
+  cursor: pointer;
 }
 
 table {
